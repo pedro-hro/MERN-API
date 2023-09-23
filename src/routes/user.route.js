@@ -1,12 +1,12 @@
-import express from "express";
+import { Router } from "express";
 import userController from "../controllers/user.controller.js";
 import { validUser, validId } from "../middlewares/global.middlewares.js";
 
-const route = express.Router();
+const router = Router();
 
-route.post("/", userController.create);
-route.get("/", userController.findAll);
-route.get("/:id", validId, validUser, userController.findById);
-route.patch("/:id", validId, validUser, userController.update);
+router.post("/", userController.create);
+router.get("/", userController.findAll);
+router.get("/:id", validId, validUser, userController.findById);
+router.patch("/:id", validId, validUser, userController.update);
 
-export default route;
+export default router;
