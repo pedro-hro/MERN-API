@@ -1,4 +1,4 @@
-const User = require("../models/User");
+import User from "../models/User.js";
 
 //"User.function", the function is a mongoose function.
 const createService = (body) => User.create(body);
@@ -18,7 +18,7 @@ const updateService = (
     { name, username, email, password, avatar, background }
   );
 
-module.exports = {
+export default {
   createService,
   findAllService,
   findByIdService,
