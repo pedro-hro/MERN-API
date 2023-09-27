@@ -7,12 +7,11 @@ const create = async (req, res) => {
     if (!title || !text || !banner) {
       res.status(400).send({ message: "Submit all fields" });
     }
-
     await createService({
       title,
       text,
       banner,
-      user: { _id: "650c916b329289d34cc75d81" },
+      user: req.userId,
     });
 
     res.sendStatus(201);
