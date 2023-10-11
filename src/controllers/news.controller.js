@@ -6,6 +6,8 @@ import {
   findByIdService,
   searchByTitleService,
   byUserService,
+  updateService,
+  eraseService,
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -39,14 +41,16 @@ const findAll = async (req, res) => {
 
     const currentUrl = req.baseUrl;
 
-    const next = offset + limit;
+    const nextOffset = offset + limit;
     const nextUrl =
-      next < total ? `${currentUrl}?limit=${limit}&offset=${next}` : null;
+      nextOffset < total
+        ? `${currentUrl}?limit=${limit}&offset=${nextOffset}`
+        : null;
 
-    const previous = offset - limit < 0 ? null : offset - limit;
+    const previousOffset = offset - limit < 0 ? null : offset - limit;
     const previousUrl =
-      previous != null
-        ? `${currentUrl}?limit=${limit}&offset=${previous}`
+      previousOffset != null
+        ? `${currentUrl}?limit=${limit}&offset=${previousOffset}`
         : null;
 
     if (news.length === 0) {
@@ -124,28 +128,29 @@ const findById = async (req, res) => {
 
 const searchByTitle = async (req, res) => {
   try {
-   const { title }  = req.query;
+    const { title } = req.query;
 
-   const news = await searchByTitleService(title);
+    const news = await searchByTitleService(title);
 
-   if(news.length === 0){
-     return res.status(400).send({ message: "There are no news with this title." });
-   }
+    if (news.length === 0) {
+      return res
+        .status(400)
+        .send({ message: "There are no news with this title." });
+    }
 
-   res.send({
-    results: news.map((newsItem) => ({
-      id: newsItem._id,
-      title: newsItem.title,
-      text: newsItem.text,
-      banner: newsItem.banner,
-      likes: newsItem.likes,
-      comments: newsItem.comments,
-      name: newsItem.user.name,
-      username: newsItem.user.username,
-      userAvatar: newsItem.user.avatar,
-    }))
-  });
-
+    res.send({
+      results: news.map((newsItem) => ({
+        id: newsItem._id,
+        title: newsItem.title,
+        text: newsItem.text,
+        banner: newsItem.banner,
+        likes: newsItem.likes,
+        comments: newsItem.comments,
+        name: newsItem.user.name,
+        username: newsItem.user.username,
+        userAvatar: newsItem.user.avatar,
+      })),
+    });
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
@@ -153,7 +158,7 @@ const searchByTitle = async (req, res) => {
 
 const byUser = async (req, res) => {
   try {
-    const id  = req.userId;
+    const id = req.userId;
     const news = await byUserService(id);
     res.send({
       results: news.map((newsItem) => ({
@@ -166,11 +171,63 @@ const byUser = async (req, res) => {
         name: newsItem.user.name,
         username: newsItem.user.username,
         userAvatar: newsItem.user.avatar,
-      })) 
+      })),
     });
   } catch (err) {
     res.status(500).send({ message: err.message });
   }
-}
+};
 
-export { create, findAll, topNews, findById, searchByTitle, byUser };
+const update = async (req, res) => {
+  try {
+    const { title, text, banner } = req.body;
+    const { id } = req.params;
+
+    if (!title && !text && !banner) {
+      res.status(400).send({ message: "Submit at least one field." });
+    }
+
+    const news = await findByIdService(id);
+
+    //"news.user.id" and "req.userId" are of different types, any problem here use String(news.user.id), for now it worked properly.
+    if (news.user.id !== req.userId) {
+      return res
+        .status(401)
+        .send({ message: "You are not authorized to update this news." });
+    }
+
+    await updateService(id, title, text, banner);
+    return res.status(200).send({ message: "News updated successfully." });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+const erase = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const news = await findByIdService(id);
+
+    if (news.user.id !== req.userId) {
+      return res
+        .status(401)
+        .send({ message: "You are not authorized to delete this news." });
+    }
+
+    await eraseService(id);
+    return res.status(200).send({ message: "News deleted successfully." });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+export {
+  create,
+  findAll,
+  topNews,
+  findById,
+  searchByTitle,
+  byUser,
+  update,
+  erase,
+};
