@@ -260,6 +260,13 @@ const addComment = async (req, res) => {
 
 const deleteComment = async (req, res) => {
   try {
+    /*
+     The workflow of this request is the following:
+     1. The service is called right at the beginning of the request. ("await deleteCommentService()")
+     2. The service deletes or not the comment. ("$pull: { comments: { idComment, userId } }", in the 'news.service.js', it requires the idComment and userId to delete the comment).
+     3. The service returns the deleted comment as it was when it found it, or return undefined. (this is stored in "newsToBeDeleted")
+     4. The client is notified that the comment was successfully deleted or that it was not found, or that it was not authorized. (Both ifs do the verifications).
+    */
     const { idNews, idComment } = req.params;
     const userId = req.userId;
 
