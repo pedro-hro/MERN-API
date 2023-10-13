@@ -9,7 +9,8 @@ import {
   updateService,
   eraseService,
   likeService,
-  deleteLikeService,
+  addCommentService,
+  deleteCommentService,
 } from "../services/news.service.js";
 
 const create = async (req, res) => {
@@ -240,6 +241,54 @@ const likeNews = async (req, res) => {
   }
 };
 
+const addComment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const { comment } = req.body;
+
+    if (!comment) {
+      return res.status(400).send({ message: "Comment is required." });
+    }
+
+    await addCommentService(id, userId, comment);
+    res.send({ message: "Comment added successfully." });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const { idNews, idComment } = req.params;
+    const userId = req.userId;
+
+    const newsToBeDeleted = await deleteCommentService(
+      idNews,
+      idComment,
+      userId
+    );
+
+    const comment = newsToBeDeleted.comments.find(
+      (comment) => comment.idComment === idComment
+    );
+
+    if (!comment) {
+      return res.status(404).send({ message: "Comment not found" });
+    }
+
+    if (comment.userId !== userId) {
+      return res.status(400).send({ message: "You can't delete this comment" });
+    }
+
+    res.send({
+      message: "Comment successfully removed!",
+    });
+  } catch (err) {
+    res.status(500).send({ message: err.message });
+  }
+};
+
 export {
   create,
   findAll,
@@ -250,4 +299,6 @@ export {
   update,
   erase,
   likeNews,
+  addComment,
+  deleteComment,
 };
