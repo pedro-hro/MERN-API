@@ -56,10 +56,10 @@ const findAll = async (req, res) => {
         ? `${currentUrl}?limit=${limit}&offset=${previousOffset}`
         : null;
 
-    if (news.length === 0) {
+    /* if (news.length === 0) {
       return res.status(400).send({ message: "There are no created news." });
     }
-
+ */
     res.send({
       nextUrl,
       previousUrl,
