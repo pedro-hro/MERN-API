@@ -1,10 +1,21 @@
-import User from "../models/User.js";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import "dotenv/config";
+import { loginRepository } from "../repositories/auth.repository.js";
 
-const loginService = (email) =>
-  User.findOne({ email: email }).select("+password");
+export async function generateToken(id) {
+  return jwt.sign({ id: id }, process.env.SECRET_JWT, { expiresIn: 86400 });
+}
+export const loginService = async (email, password) => {
+  const user = await loginRepository(email);
 
-const generateToken = (id) =>
-  jwt.sign({ id: id }, process.env.SECRET_JWT, { expiresIn: 86400 });
+  if (!user) throw new Error("Invalid login or password.");
 
-export { loginService, generateToken };
+  const pswdIsValid = await bcrypt.compare(password, user.password);
+
+  if (!pswdIsValid) throw new Error("Invalid login or password.");
+
+  const token = await generateToken(user.id);
+
+  return token;
+};

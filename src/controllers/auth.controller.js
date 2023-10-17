@@ -1,28 +1,11 @@
-import bcrypt from "bcryptjs";
-import { loginService, generateToken } from "../services/auth.service.js";
+import { loginService } from "../services/auth.service.js";
 
-const login = async (req, res) => {
+export const login = async (req, res) => {
+  const { email, password } = req.body;
   try {
-    const { email, password } = req.body;
-
-    const user = await loginService(email);
-
-    if (!user) {
-      return res.status(403).send({ message: "Invalid login or password." });
-    }
-
-    const pswdIsValid = await bcrypt.compare(password, user.password);
-
-    if (!pswdIsValid) {
-      return res.status(403).send({ message: "Invalid login or password." });
-    }
-
-    const token = generateToken(user.id);
-
-    res.send({token});
-  } catch (err) {
-    res.status(500).send(err.message);
+    const token = await loginService(email, password);
+    return res.status(200).send({ token });
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 };
-
-export { login };

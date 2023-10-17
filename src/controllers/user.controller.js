@@ -1,54 +1,30 @@
 import userService from "../services/user.service.js";
 
 const create = async (req, res) => {
+  const body = req.body;
   try {
-    const { name, username, email, password, avatar, background } = req.body;
+    const user = await userService.createService(body);
 
-    if (!name || !username || !email || !password || !avatar || !background) {
-      res.status(400).send({ message: "Submit all fields" });
-    } else {
-      const user = await userService.createService(req.body);
-
-      if (!user) {
-        return res.status(400).send({ message: "Error creating user." });
-      }
-
-      res.status(201).send({
-        message: "User created!",
-        user: {
-          id: user._id,
-          name,
-          username,
-          email,
-          avatar,
-          background,
-        },
-      });
-    }
-  } catch (err) {
-    res.status(500).send({ message: err.message });
+    return res.status(201).send(user);
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 };
 
 const findAll = async (req, res) => {
   try {
     const users = await userService.findAllService();
-
-    if (users.length === 0) {
-      return res
-        .status(400)
-        .send({ message: "There are no registered users." });
-    }
-
-    res.send(users);
-  } catch (err) {
-    res.status(500).send({ message: err.message });
+    return res.send(users);
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 };
 
 const findById = async (req, res) => {
   try {
-    const user = req.user;
+    const id = req.params;
+    const idAuth = req.userId;
+    const user = await userService.findByIdService(id, idAuth);
 
     res.send(user);
   } catch (err) {
@@ -59,25 +35,12 @@ const findById = async (req, res) => {
 const update = async (req, res) => {
   try {
     const { name, username, email, password, avatar, background } = req.body;
+    const id = req.userId;
+    const response = await userService.updateService({ name, username, email, password, avatar, background }, id);
 
-    if (!name && !username && !email && !password && !avatar && !background) {
-      res.status(400).send({ message: "Submit at least one field." });
-    } else {
-      const { id, user } = req;
-
-      await userService.updateService(
-        id,
-        name,
-        username,
-        email,
-        password,
-        avatar,
-        background
-      );
-      res.status(200).send({ message: "User successfully updated." });
-    }
-  } catch (err) {
-    res.status(500).send({ message: err.message });
+    res.status(200).send(response);
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 };
 
